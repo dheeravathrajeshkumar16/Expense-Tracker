@@ -100,32 +100,49 @@ const TableData = (props) => {
               <th>Amount</th>
               <th>Type</th>
               <th>Category</th>
-              <th>Action</th>
+              <th className="text-end">Action</th>
             </tr>
           </thead>
-          <tbody className="text-white">
-            {props.data.map((item, index) => (
-              <tr key={index}>
-                <td>{moment(item.date).format("YYYY-MM-DD")}</td>
-                <td>{item.title}</td>
-                <td>{item.amount}</td>
-                <td>{item.transactionType}</td>
-                <td>{item.category}</td>
-                <td>
-                  <div className="icons-handle">
-                    <EditNoteIcon
-                      sx={{ cursor: "pointer" }}
-                      key={item._id}
-                      id={item._id}
-                      onClick={() => handleEditClick(item._id)}
-                    />
+          <tbody>
+            {props.data.map((item, index) => {
+              const isCredit = item.transactionType === "credit";
+              return (
+                <tr key={index}>
+                  <td className="text-secondary fw-semibold">
+                    {moment(item.date).format("MMM DD, YYYY")}
+                  </td>
+                  <td className="fw-bold">{item.title}</td>
+                  <td className={isCredit ? "text-success fw-bold" : "text-danger fw-bold"}>
+                    {isCredit ? "+" : "-"}₹{Number(item.amount).toLocaleString()}
+                  </td>
+                  <td>
+                    <span className={isCredit ? "glass-badge glass-badge-income" : "glass-badge glass-badge-expense"}>
+                      {isCredit ? "Credit" : "Expense"}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="glass-badge glass-badge-category">
+                      {item.category}
+                    </span>
+                  </td>
+                  <td className="text-end">
+                    <div className="d-flex align-items-center justify-content-end gap-2">
+                      <button
+                        className="btn btn-sm btn-outline-info border-0 rounded-circle p-1"
+                        onClick={() => handleEditClick(item._id)}
+                        title="Edit Transaction"
+                      >
+                        <EditNoteIcon fontSize="small" />
+                      </button>
 
-                    <DeleteForeverIcon
-                      sx={{ color: "red", cursor: "pointer" }}
-                      key={index}
-                      id={item._id}
-                      onClick={() => handleDeleteClick(item._id)}
-                    />
+                      <button
+                        className="btn btn-sm btn-outline-danger border-0 rounded-circle p-1"
+                        onClick={() => handleDeleteClick(item._id)}
+                        title="Delete Transaction"
+                      >
+                        <DeleteForeverIcon fontSize="small" />
+                      </button>
+                    </div>
 
                     {editingTransaction ? (
                       <>
@@ -253,7 +270,8 @@ const TableData = (props) => {
                   </div>
                 </td>
               </tr>
-            ))}
+            );
+          })}
           </tbody>
         </Table>
       </Container>

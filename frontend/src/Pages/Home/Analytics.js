@@ -87,16 +87,16 @@ const Analytics = ({ transactions = [], budgets = [], onOpenBudgetModal }) => {
   ];
 
   const categoryColors = {
-    Groceries: "#FF6384",
-    Rent: "#36A2EB",
-    Salary: "#FFCE56",
-    Tip: "#4BC0C0",
-    Food: "#9966FF",
-    Medical: "#FF9F40",
-    Utilities: "#8AC926",
-    Entertainment: "#6A4C93",
-    Transportation: "#1982C4",
-    Other: "#F45B69",
+    Groceries: "#FF453A",
+    Rent: "#0A84FF",
+    Salary: "#30D158",
+    Tip: "#64D2FF",
+    Food: "#BF5AF2",
+    Medical: "#FF9F0A",
+    Utilities: "#FFD60A",
+    Entertainment: "#5E5CE6",
+    Transportation: "#5AC8FA",
+    Other: "#E5E5EA",
   };
 
   // Prepare chart data for Expense Categories
@@ -137,14 +137,14 @@ const Analytics = ({ transactions = [], budgets = [], onOpenBudgetModal }) => {
       {
         label: "Income",
         data: [totalTurnOverIncome],
-        backgroundColor: "#2ea44f",
-        borderRadius: 6,
+        backgroundColor: "#30D158",
+        borderRadius: 8,
       },
       {
         label: "Expense",
         data: [totalTurnOverExpense],
-        backgroundColor: "#cb2431",
-        borderRadius: 6,
+        backgroundColor: "#FF453A",
+        borderRadius: 8,
       },
     ],
   };
