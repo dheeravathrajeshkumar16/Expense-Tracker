@@ -7,6 +7,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import transactionRoutes from "./Routers/Transactions.js";
 import userRoutes from "./Routers/userRouter.js";
+import budgetRoutes from "./Routers/BudgetRoutes.js";
 import path from "path";
 
 dotenv.config({ path: "./config/config.env" });
@@ -38,6 +39,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // Router
 app.use("/api/v1", transactionRoutes);
+app.use("/api/v1", budgetRoutes);
 app.use("/api/auth", userRoutes);
 
 app.get("/", (req, res) => {

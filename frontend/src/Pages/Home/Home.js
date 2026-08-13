@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button, Modal, Form, Container } from "react-bootstrap";
 // import loading from "../../assets/loader.gif";
 import "./home.css";
-import { addTransaction, getTransactions } from "../../utils/ApiRequest";
+import { addTransaction, getTransactions, getBudgetsAPI } from "../../utils/ApiRequest";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -14,7 +14,9 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import Analytics from "./Analytics";
+import BudgetModal from "../../components/BudgetModal";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -39,6 +41,8 @@ const Home = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [view, setView] = useState("table");
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [budgets, setBudgets] = useState([]);
 
   const handleStartChange = (date) => {
     setStartDate(date);
@@ -50,6 +54,8 @@ const Home = () => {
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
+  const handleCloseBudgetModal = () => setShowBudgetModal(false);
+  const handleShowBudgetModal = () => setShowBudgetModal(true);
 
   useEffect(() => {
     const avatarFunc = async () => {
@@ -69,6 +75,22 @@ const Home = () => {
 
     avatarFunc();
   }, [navigate]);
+
+  useEffect(() => {
+    const fetchUserBudgets = async () => {
+      if (cUser?._id) {
+        try {
+          const { data } = await axios.post(getBudgetsAPI, { userId: cUser._id });
+          if (data.success) {
+            setBudgets(data.budgets || []);
+          }
+        } catch (err) {
+          console.error("Failed to load budgets", err);
+        }
+      }
+    };
+    fetchUserBudgets();
+  }, [cUser, refresh]);
 
   const [values, setValues] = useState({
     title: "",
@@ -106,6 +128,7 @@ const Home = () => {
       !transactionType
     ) {
       toast.error("Please enter all the fields", toastOptions);
+      return;
     }
     setLoading(true);
 
@@ -121,6 +144,29 @@ const Home = () => {
 
     if (data.success === true) {
       toast.success(data.message, toastOptions);
+
+      // Check category budget limit and warn if spending approaches or exceeds limit
+      if (transactionType === "expense") {
+        const currentCategorySpend = transactions
+          .filter((t) => t.transactionType === "expense" && t.category === category)
+          .reduce((acc, t) => acc + Number(t.amount || 0), 0);
+        const newTotal = currentCategorySpend + Number(amount);
+        const targetBudget = budgets.find((b) => b.category === category);
+        if (targetBudget && targetBudget.limitAmount > 0) {
+          if (newTotal >= targetBudget.limitAmount) {
+            toast.error(
+              `⚠️ Budget Alert: Total spend for ${category} is now ₹${newTotal.toLocaleString()}, exceeding limit of ₹${targetBudget.limitAmount.toLocaleString()}!`,
+              { ...toastOptions, autoClose: 6000 }
+            );
+          } else if (newTotal >= targetBudget.limitAmount * 0.8) {
+            toast.warning(
+              `⚠️ Budget Warning: Total spend for ${category} reached ${((newTotal / targetBudget.limitAmount) * 100).toFixed(0)}% of your limit!`,
+              { ...toastOptions, autoClose: 5000 }
+            );
+          }
+        }
+      }
+
       handleClose();
       setRefresh(!refresh);
     } else {
@@ -239,12 +285,18 @@ const Home = () => {
                 />
               </div>
 
-              <div>
+              <div className="d-flex align-items-center gap-2">
                 <Button onClick={handleShow} className="addNew">
                   Add New
                 </Button>
+                <Button variant="outline-warning" onClick={handleShowBudgetModal} className="addNew border-warning text-warning fw-bold">
+                  <AccountBalanceWalletIcon fontSize="small" className="me-1" /> Manage Budgets
+                </Button>
                 <Button onClick={handleShow} className="mobileBtn">
                   +
+                </Button>
+                <Button variant="outline-warning" onClick={handleShowBudgetModal} className="mobileBtn ms-1">
+                  <AccountBalanceWalletIcon fontSize="small" />
                 </Button>
                 <Modal show={show} onHide={handleClose} centered>
                   <Modal.Header closeButton>
@@ -394,9 +446,21 @@ const Home = () => {
               </>
             ) : (
               <>
-                <Analytics transactions={transactions} user={cUser} />
+                <Analytics
+                  transactions={transactions}
+                  user={cUser}
+                  budgets={budgets}
+                  onOpenBudgetModal={handleShowBudgetModal}
+                />
               </>
             )}
+            <BudgetModal
+              show={showBudgetModal}
+              handleClose={handleCloseBudgetModal}
+              user={cUser}
+              onBudgetUpdated={(updated) => setBudgets(updated)}
+              transactions={transactions}
+            />
             <ToastContainer />
           </Container>
         </>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Container, Row, Col, Card } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, ProgressBar, Badge } from "react-bootstrap";
 import CircularProgressBar from "../../components/CircularProgressBar";
 import LineProgressBar from "../../components/LineProgressBar";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
@@ -8,6 +8,9 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import PieChartIcon from "@mui/icons-material/PieChart";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 import {
   Chart as ChartJS,
@@ -31,7 +34,7 @@ ChartJS.register(
   Title
 );
 
-const Analytics = ({ transactions = [] }) => {
+const Analytics = ({ transactions = [], budgets = [], onOpenBudgetModal }) => {
   const TotalTransactions = transactions.length;
 
   const totalIncomeTransactions = transactions.filter(
@@ -393,6 +396,77 @@ const Analytics = ({ transactions = [] }) => {
                   </React.Fragment>
                 );
               })}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Budget Limits & Spending Warnings Monitor */}
+      <Row className="g-4 mt-2">
+        <Col lg={12}>
+          <Card className="bg-dark text-white border-secondary shadow-sm">
+            <Card.Header className="bg-black text-white fw-bold d-flex align-items-center justify-content-between">
+              <div className="d-flex align-items-center gap-2">
+                <AccountBalanceWalletIcon className="text-warning" />
+                <span>Category Budget Spending & Warning Alerts</span>
+              </div>
+              <Button variant="outline-warning" size="sm" onClick={onOpenBudgetModal} className="fw-bold">
+                Configure Budgets
+              </Button>
+            </Card.Header>
+            <Card.Body>
+              {budgets.length === 0 ? (
+                <div className="text-center py-4 text-muted">
+                  <p className="mb-2">No category spending limits set yet.</p>
+                  <Button variant="warning" size="sm" onClick={onOpenBudgetModal} className="fw-bold">
+                    Set Up Budget Limits
+                  </Button>
+                </div>
+              ) : (
+                <Row className="g-3">
+                  {budgets.map((b) => {
+                    const spent = transactions
+                      .filter((t) => t.transactionType === "expense" && t.category === b.category)
+                      .reduce((acc, t) => acc + Number(t.amount || 0), 0);
+                    const percent = Math.min(((spent / b.limitAmount) * 100), 100);
+                    const isExceeded = spent >= b.limitAmount;
+                    const isWarning = spent >= b.limitAmount * 0.8 && !isExceeded;
+
+                    let variant = "success";
+                    let icon = <CheckCircleOutlineIcon className="text-success me-1" />;
+                    let badge = <Badge bg="success">On Track</Badge>;
+
+                    if (isExceeded) {
+                      variant = "danger";
+                      icon = <ErrorOutlineIcon className="text-danger me-1" />;
+                      badge = <Badge bg="danger">Budget Exceeded!</Badge>;
+                    } else if (isWarning) {
+                      variant = "warning";
+                      icon = <WarningAmberIcon className="text-warning me-1" />;
+                      badge = <Badge bg="warning" text="dark">Warning (≥80%)</Badge>;
+                    }
+
+                    return (
+                      <Col lg={4} md={6} key={b._id}>
+                        <div className="p-3 bg-black bg-opacity-40 rounded border border-secondary">
+                          <div className="d-flex justify-content-between align-items-center mb-2">
+                            <h6 className="mb-0 fw-bold text-info d-flex align-items-center">
+                              {icon}
+                              {b.category}
+                            </h6>
+                            {badge}
+                          </div>
+                          <div className="d-flex justify-content-between text-muted small mb-1">
+                            <span>Spent: <strong className={isExceeded ? "text-danger" : "text-white"}>₹{spent.toLocaleString()}</strong></span>
+                            <span>Limit: <strong>₹{b.limitAmount.toLocaleString()}</strong></span>
+                          </div>
+                          <ProgressBar now={percent} variant={variant} style={{ height: "8px" }} />
+                        </div>
+                      </Col>
+                    );
+                  })}
+                </Row>
+              )}
             </Card.Body>
           </Card>
         </Col>

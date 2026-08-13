@@ -7,3 +7,6 @@ export const addTransaction = `${host}/api/v1/addTransaction`;
 export const getTransactions = `${host}/api/v1/getTransaction`;
 export const editTransactions = `${host}/api/v1/updateTransaction`;
 export const deleteTransactions = `${host}/api/v1/deleteTransaction`;
+export const setBudgetAPI = `${host}/api/v1/setBudget`;
+export const getBudgetsAPI = `${host}/api/v1/getBudgets`;
+export const deleteBudgetAPI = `${host}/api/v1/deleteBudget`;
