@@ -267,11 +267,10 @@ const TableData = (props) => {
                     ) : (
                       <></>
                     )}
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </Table>
       </Container>
